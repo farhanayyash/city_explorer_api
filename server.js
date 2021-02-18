@@ -18,11 +18,32 @@ app.get('/location', (req, res) => {
 
 })
 
+app.get('/weather', (req, res) => {
+  const weather = require('./data/weather.json');
+
+  let weatherArr = [];
+  weather.data.forEach(element => {
+      let time = element.datetime;
+      let forecast = element.weather.description
+      let weatherData = new Weather(forecast, time);
+      weatherArr.push(weatherData);
+
+  });
+  res.status(200).send(weatherArr);
+  
+
+});
+
 function Location(cityREQ, location_Json) {
   this.search_query = cityREQ;
   this.formatted_query = location_Json[0].display_name;
   this.latitude = location_Json[0].lat;
   this.longitude = location_Json[0].lon;
+}
+
+function Weather(forecast, time) {
+  this.forecast = forecast;
+  this.time = time;
 }
 
 app.use('*', (request, response) => response.send('Sorry, that route does not exist.'));
