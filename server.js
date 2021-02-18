@@ -12,30 +12,15 @@ app.use(cors());
 
 app.get('/location', (req, res) => {
   const location_Json = require('./data/location.json');
-  const weather2 = require('./data/weather.json');
   const cityREQ = req.query.city;
-  if(cityREQ != weather2.city_name){
-    let x = {
-      status: 500,
-      responseText: "Sorry, something went wrong",
-    }
-    res.send(x);
-  }else{
   let locationData = new Location(cityREQ, location_Json);
   res.status(200).send(locationData);
-  }
+
 })
 
 app.get('/weather', (req, res) => {
   const weather = require('./data/weather.json');
-  const cityREQ = req.query.city;
-  if(cityREQ != weather2.city_name){
-    let x = {
-      status: 500,
-      responseText: "Sorry, something went wrong",
-    }
-    res.send(x);
-  }else{
+
   let weatherArr = [];
   weather.data.forEach(element => {
       let time = element.datetime;
@@ -45,7 +30,8 @@ app.get('/weather', (req, res) => {
 
   });
   res.status(200).send(weatherArr);
-}
+  
+
 });
 
 function Location(cityREQ, location_Json) {
@@ -60,7 +46,7 @@ function Weather(forecast, time) {
   this.time = time;
 }
 
-app.use('*', (request, response) => response.status(500).send('Sorry, something went wrong'));
+app.use('*', (request, response) => response.status(500).send('Sorry, that route does not exist.'));
 
 app.listen(PORT,() => console.log(`Listening on port ${PORT}`));
 
