@@ -29,7 +29,8 @@ app.get('/weather', (req, res) => {
       weatherArr.push(weatherData);
 
   });
-  res.send(weatherArr);
+  res.status(200).send(weatherArr);
+  
 
 });
 
