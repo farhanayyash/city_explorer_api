@@ -46,7 +46,7 @@ function Weather(forecast, time) {
   this.time = time;
 }
 
-app.use('*', (request, response) => response.send('Sorry, that route does not exist.'));
+app.use('*', (request, response) => response.status(500).send('Sorry, something went wrong'));
 
 app.listen(PORT,() => console.log(`Listening on port ${PORT}`));
 
