@@ -3,12 +3,12 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-
+const cors = require('cors');
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static('./public'));
 
-
+app.use(cors());
 
 app.get('/location', (req, res) => {
   const location_Json = require('./data/location.json');
