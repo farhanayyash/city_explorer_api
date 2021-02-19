@@ -29,7 +29,7 @@ app.use(errorHandler);
 
 function locationHandler(request, response) {
     const city = request.query.city;
-    console.log(city);
+    // console.log(city);
     // getLocation(city)
     let key = process.env.LOCATIONIO_KEY;
     let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
