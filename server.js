@@ -32,6 +32,8 @@ function locationHandler(request, response) {
     // console.log(city);
     // getLocation(city)
     let key = process.env.LOCATIONIO_KEY;
+    response.status(200).send("this is "+key);
+    
     let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
     superagent.get(URL)
         .then(geoData => {
