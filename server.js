@@ -20,7 +20,7 @@ app.get('/', (request, response) => {
 // localhost: 3030 / location ? city = lynwood 
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
-app.get('/park', parkHandler);
+app.get('/parks', parkHandler);
 
 app.use('*', notFoundHandler);
 app.use(errorHandler);
@@ -32,6 +32,7 @@ function locationHandler(request, response) {
     // console.log(city);
     // getLocation(city)
     let key = process.env.LOCATIONIO_KEY;
+
     let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
     superagent.get(URL)
         .then(geoData => {
@@ -92,8 +93,39 @@ function Weather(day) {
 
 
 function parkHandler(request, response) {
-  response.status(404).send("parkHandler");
+    const city = request.query.search_query;
+    // console.log(city);
+    let key = process.env.PARK_KEY;
+
+    let URL = `https://developer.nps.gov/api/v1/parks?limit=10&q=${city}&api_key=${key}`;
+    // console.log(URL);
+
+    superagent.get(URL)
+        .then(geoData => {
+            console.log(geoData.body.data);
+            let localpark = [];
+            geoData.body.data.forEach(element => {
+                let parkel = new park(element);
+                localpark.push(parkel);
+            }); 
+            response.status(200).send(localpark);
+        })
+        .catch(() => {
+            errorHandler('something went wrong in gtting the data from locationiq web', request, response)
+        })
+
 }
+function park(geoData) {
+    this.name = geoData.fullName;
+    this.address = geoData.addresses[0].line1 +' ' + geoData.addresses[0].city +' '+  geoData.addresses[0].stateCode +' ' + geoData.addresses[0].postalCode;
+    this.fee = geoData.entranceFees[0].cost;
+    this.description = geoData.description;
+    this.url = geoData.url;
+}
+
+// function parkHandler(request, response) {
+//     response.status(404).send("parkHandler");
+// }
 
 
 
