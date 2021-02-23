@@ -27,11 +27,23 @@ app.get('/location', locationHandling);
 app.get('/weather', weatherHandler);
 app.get('/parks', parkHandler);
 
+app.get('/all',(req,res)=>{
+    let SQL = `SELECT * FROM people;`;
+    client.query(SQL)
+    .then(results =>{
+        // console.log(results);
+        res.send(results.rows);
+    })
+   
+})
+
 
 
 
 app.use('*', notFoundHandler);
 app.use(errorHandler);
+
+
 
 
 function locationHandling(req, res) {
