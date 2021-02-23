@@ -28,7 +28,7 @@ app.get('/weather', weatherHandler);
 app.get('/parks', parkHandler);
 
 app.get('/all',(req,res)=>{
-    let SQL = `SELECT * FROM people;`;
+    let SQL = `SELECT * FROM locations;`;
     client.query(SQL)
     .then(results =>{
         // console.log(results);
