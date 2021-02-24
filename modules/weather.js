@@ -16,13 +16,11 @@ all_weather.weatherHandler= function(request, response) {
 all_weather.getWeather= function(lat, lon) {
   let weatherSummaries = [];
   let key = process.env.WEATHER_KEY;
-  // console.log('lon= ' + lon + '>>>>>>', 'lat= ' + lat + '>>>>>>>', 'key=' + key);
   let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&days=8&units=S&key=${key}`;
 
   return superagent.get(url)
       .then(weatherData => {
           let data = weatherData.body.data;
-          console.log(data);
           return data;
       })
       .then(weatherData => {

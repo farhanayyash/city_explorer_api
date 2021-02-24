@@ -1,9 +1,11 @@
 'use strict';
+require('dotenv').config();
 const superagent = require('superagent');
 const pg = require('pg');
 
-const client = new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client(process.env.DATABASE_URL);
 
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
 
 let all_location = {};
 
@@ -14,33 +16,28 @@ all_location.locationHandling = function (req, res) {
   const cityData = req.query.city;
   let locationAPIKey = process.env.GEOCODE_API_KEY;
   const url = `https://eu1.locationiq.com/v1/search.php?key=${locationAPIKey}&q=${cityData}&format=json`;
-
   let selectAllSQL = `SELECT * FROM locations;`;
   let selectSQL = `SELECT * FROM locations WHERE search_query=$1;`;
   let safeValues = [];
-  console.log("hi1");
-  console.log(client.query(selectAllSQL));
+
   client.query(selectAllSQL).then((result) => {
       if (result.rows.length <= 0) {
           superagent.get(url).then((data) => {
               console.log(`from API`);
-              const locationData = new this.Location( cityData ,data.body);
-              this.insertLocationInDB(locationData);
-              console.log(locationData);
+              const locationData = new all_location.Location( cityData ,data.body);
+              all_location.insertLocationInDB(locationData);
               res.status(200).josn(locationData);
           });
       } else {
-        console.log("hi4");
 
           safeValues = [cityData];
           client.query(selectSQL, safeValues).then((result) => {
               if (result.rows.length <= 0) {
                   superagent.get(url).then((data1) => {
                       console.log(`From API Again`);
-                      const locationData = new this.Location( cityData ,data1.body);
+                      const locationData = new all_location.Location( cityData ,data1.body);
                       
-                      this.insertLocationInDB(locationData);
-                      // console.log(locationData);
+                      all_location.insertLocationInDB(locationData);
                       res.status(200).json(locationData);
                   });
               } else {
@@ -50,7 +47,6 @@ all_location.locationHandling = function (req, res) {
           });
       }
   });
-  console.log("hi3");
 
 }
 
@@ -75,6 +71,8 @@ all_location.Location = function(city, geoData) {
   this.latitude = geoData[0].lat;
   this.longitude = geoData[0].lon;
 }
-console.log(all_location.locationHandling);
+
+client.connect()
+
 
 module.exports = all_location;

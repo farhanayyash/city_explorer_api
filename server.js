@@ -6,10 +6,10 @@ const cors = require('cors');
 const pg = require('pg');
 const all_location = require('./modules/location');
 const all_weather = require('./modules/weather');
+const all_try = require('./all');
 
 const superagent = require('superagent');
 
-// console.log(all_location);
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,17 +27,19 @@ app.get('/', (request, response) => {
     response.status(200).send('Welcome to my page for testing API');
 });
 
-app.get('/location', locationHandling);
+app.get('/location', all_location.locationHandling);
 app.get('/weather', all_weather.weatherHandler);
 app.get('/parks', parkHandler);
 app.get('/movies', moviesHandiling);
 app.get('/yelp', yelpHandiling);
+app.get('/try', all_try.tryhandler);
+
+
 
 app.get('/all',(req,res)=>{
     let SQL = `SELECT * FROM locations;`;
     client.query(SQL)
     .then(results =>{
-        // console.log(results);
         res.send(results.rows);
     })
    
@@ -52,105 +54,6 @@ app.use(errorHandler);
 
 
 
-function locationHandling(req, res) {
-    const cityData = req.query.city;
-    let locationAPIKey = process.env.GEOCODE_API_KEY;
-    const url = `https://eu1.locationiq.com/v1/search.php?key=${locationAPIKey}&q=${cityData}&format=json`;
-
-    let selectAllSQL = `SELECT * FROM locations;`;
-    let selectSQL = `SELECT * FROM locations WHERE search_query=$1;`;
-    let safeValues = [];
-    console.log(client.query(selectAllSQL));
-    client.query(selectAllSQL).then((result) => {
-        if (result.rows.length <= 0) {
-            superagent.get(url).then((data) => {
-                console.log(`from API`);
-                const locationData = new Location( cityData ,data.body);
-                insertLocationInDB(locationData);
-                console.log(locationData);
-                res.status(200).josn(locationData);
-            });
-        } else {
-            safeValues = [cityData];
-            client.query(selectSQL, safeValues).then((result) => {
-                if (result.rows.length <= 0) {
-                    superagent.get(url).then((data1) => {
-                        console.log(`From API Again`);
-                        const locationData = new Location( cityData ,data1.body);
-                        
-                        insertLocationInDB(locationData);
-                        // console.log(locationData);
-                        res.status(200).json(locationData);
-                    });
-                } else {
-                    console.log('form data base');
-                    res.status(200).json(result.rows[0]);
-                }
-            });
-        }
-    });
-}
-
-
-
-function insertLocationInDB(obj) {
-    let insertSQL = `INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4);`;
-    let safeValues = [
-        obj.search_query,
-        obj.formatted_query,
-        obj.latitude,
-        obj.longitude,
-    ];
-    client.query(insertSQL, safeValues).then(() => {
-        console.log('storing data in database');
-    });
-}
-
-function Location(city, geoData) {
-    this.search_query = city;
-    this.formatted_query = geoData[0].display_name;
-    this.latitude = geoData[0].lat;
-    this.longitude = geoData[0].lon;
-}
-
-
-function weatherHandler(request, response) {
-    let lat = request.query.latitude;
-    let lon = request.query.longitude;
-    getWeather(lat, lon)
-        .then(val => {
-            response.status(200).json(val);
-        });
-}
-
-function getWeather(lat, lon) {
-    let weatherSummaries = [];
-    let key = process.env.WEATHER_KEY;
-    // console.log('lon= ' + lon + '>>>>>>', 'lat= ' + lat + '>>>>>>>', 'key=' + key);
-    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&days=8&units=S&key=${key}`;
-
-    return superagent.get(url)
-        .then(weatherData => {
-            let data = weatherData.body.data;
-            console.log(data);
-            return data;
-        })
-        .then(weatherData => {
-
-            weatherSummaries = weatherData.map(val => {
-                return new Weather(val)
-            });
-            return weatherSummaries
-        });
-}
-
-function Weather(day) {
-    this.forecast = day.weather.description;
-    this.time = new Date(day.valid_date).toString().slice(0, 15);
-}
-
-
-
 function parkHandler(request, response) {
     const city = request.query.search_query;
     // console.log(city);
@@ -161,7 +64,6 @@ function parkHandler(request, response) {
 
     superagent.get(URL)
         .then(geoData => {
-            console.log(geoData.body.data);
             let localpark = [];
             geoData.body.data.forEach(element => {
                 let parkel = new park(element);
@@ -194,7 +96,6 @@ function moviesHandiling(req, res) {
     superagent
         .get(url)
         .then((data) => {
-            console.log(data.body.results);
             let moviesArray = data.body.results.map((data) => {
                 // console.log(moviesArray);
                 return new Movies(data);
@@ -222,7 +123,6 @@ function yelpHandiling(req, res) {
     let pagenum = req.query.page;
     let x = (pagenum-1)*5;
     let url = `https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${lat}&longitude=${lon}&limit=5&offset=${x}`;
-    console.log(url);
     superagent
         .get(url)
         .set({
